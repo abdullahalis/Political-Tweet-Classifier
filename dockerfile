@@ -1,17 +1,16 @@
-# Use an official Conda base image
-FROM continuumio/miniconda3
+FROM public.ecr.aws/lambda/python:3.9
 
-# Set working directory
-WORKDIR /app
+ENV NLTK_DATA=/nltk_data
 
-# Copy environment.yml to the container
-COPY environment.yml .
+# Copy function code and model into container
+COPY lambda_function.py model.pkl tfidf.pkl ./
 
-# Create the Conda environment
-RUN conda env create -f environment.yml
+# Install dependencies
+COPY requirements.txt ./
+RUN pip install -r requirements.txt -t .
 
-# Make sure the environment is activated when the container starts
-SHELL ["conda", "run", "-n", "cs-418", "/bin/bash", "-c"]
+# Copy NLTK data
+COPY nltk_data /nltk_data
 
-# Set the default command to run an interactive shell
-CMD ["bash"]
+# Set the Lambda function handler
+CMD ["lambda_function.lambda_handler"]
